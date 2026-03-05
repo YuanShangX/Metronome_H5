@@ -14,5 +14,5 @@
 
 打开即用，专注每一次练习。
 在线访问：https://yuanshangx.github.io/Metronome_H5/
-<img width="392" height="584" alt="image" src="https://github.com/user-attachments/assets/f140a194-9f73-403d-96fc-f08b936addb9" />
+<img width="344" height="746" alt="image" src="https://github.com/user-attachments/assets/f140a194-9f73-403d-96fc-f08b936addb9" />
 <img width="344" height="746" alt="image" src="https://github.com/user-attachments/assets/3c56fa2b-8aa2-4c66-b92b-a04b264880b1" />
