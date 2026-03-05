@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>节拍器音频生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #d4af37;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #c49d2e;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #252525;
+            border-radius: 10px;
+        }
+        h2 {
+            color: #d4af37;
+        }
+        .info {
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>节拍器音频生成器</h1>
+    <p class="info">点击按钮生成并下载音频文件，然后将文件放到 static/audio/ 目录下</p>
+
+    <div class="section">
+        <h2>木鱼音色</h2>
+        <button onclick="generateWood(false)">生成 wood_normal.wav (普通拍)</button>
+        <button onclick="generateWood(true)">生成 wood_accent.wav (重音拍)</button>
+    </div>
+
+    <div class="section">
+        <h2>咔哒音色</h2>
+        <button onclick="generateClick(false)">生成 click_normal.wav (普通拍)</button>
+        <button onclick="generateClick(true)">生成 click_accent.wav (重音拍)</button>
+    </div>
+
+    <div class="section">
+        <h2>电子音色</h2>
+        <button onclick="generateBeep(false)">生成 beep_normal.wav (普通拍)</button>
+        <button onclick="generateBeep(true)">生成 beep_accent.wav (重音拍)</button>
+    </div>
+
+    <div class="section">
+        <h2>鼓声音色</h2>
+        <button onclick="generateDrum(false)">生成 drum_normal.wav (普通拍)</button>
+        <button onclick="generateDrum(true)">生成 drum_accent.wav (重音拍)</button>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function generateWood(isAccent) {
+            const duration = 0.08;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            const freq = isAccent ? 1200 : 800;
+            const volume = isAccent ? 0.4 : 0.25;
+            
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const envelope = Math.exp(-t * 30);
+                data[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+            }
+            
+            downloadBuffer(buffer, `wood_${isAccent ? 'accent' : 'normal'}.wav`);
+        }
+
+        function generateClick(isAccent) {
+            const duration = 0.05;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            const freq = isAccent ? 1500 : 1000;
+            const volume = isAccent ? 0.35 : 0.2;
+            
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const envelope = Math.exp(-t * 50);
+                const noise = (Math.random() * 2 - 1) * 0.3;
+                const tone = Math.sin(2 * Math.PI * freq * t) * 0.7;
+                data[i] = (tone + noise) * envelope * volume;
+            }
+            
+            downloadBuffer(buffer, `click_${isAccent ? 'accent' : 'normal'}.wav`);
+        }
+
+        function generateBeep(isAccent) {
+            const duration = 0.1;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            const freq = isAccent ? 880 : 660;
+            const volume = isAccent ? 0.3 : 0.18;
+            
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const envelope = Math.exp(-t * 20);
+                data[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+            }
+            
+            downloadBuffer(buffer, `beep_${isAccent ? 'accent' : 'normal'}.wav`);
+        }
+
+        function generateDrum(isAccent) {
+            const duration = 0.15;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            const freq = isAccent ? 200 : 150;
+            const volume = isAccent ? 0.5 : 0.3;
+            
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+                const envelope = Math.exp(-t * 15);
+                const noise = (Math.random() * 2 - 1) * 0.2;
+                const kick = Math.sin(2 * Math.PI * freq * t * (1 - t * 5)) * 0.8;
+                data[i] = (kick + noise) * envelope * volume;
+            }
+            
+            downloadBuffer(buffer, `drum_${isAccent ? 'accent' : 'normal'}.wav`);
+        }
+
+        function downloadBuffer(buffer, filename) {
+            const wav = bufferToWave(buffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log(`已生成: ${filename}`);
+        }
+
+        function bufferToWave(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+            const arrayBuffer = new ArrayBuffer(length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+
+            // WAV header
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (uncompressed)
+            setUint16(buffer.numberOfChannels);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels); // avg. bytes/sec
+            setUint16(buffer.numberOfChannels * 2); // block-align
+            setUint16(16); // 16-bit
+            setUint32(0x61746164); // "data" - chunk
+            setUint32(length - pos - 4); // chunk length
+
+            // Write interleaved data
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (pos < length) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return arrayBuffer;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+        }
+    </script>
+</body>
+</html>
